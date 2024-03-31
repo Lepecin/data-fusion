@@ -19,7 +19,7 @@ class GLU(nn.Module):
 
 
 class GRN(nn.Module):
-    def __init__(self, size: int, context_size: Optional[int]):
+    def __init__(self, size: int, context_size: Optional[int] = None):
         super().__init__()
 
         self.linear = nn.Linear(size, size)
@@ -35,7 +35,7 @@ class GRN(nn.Module):
             self.linear_context = nn.Linear(context_size, size, False)
 
     def forward(
-        self, input: torch.Tensor, context: Optional[torch.Tensor]
+        self, input: torch.Tensor, context: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
 
         transformed = self.linear.forward(input)
