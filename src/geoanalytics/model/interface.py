@@ -1,4 +1,5 @@
 import torch
+import polars
 from lightning import LightningModule
 
 from .bulktrans import BulkTransformerModel, BulkTransformerConfig
@@ -8,6 +9,7 @@ class BulkTransformerInterface(LightningModule):
     def __init__(self, config: BulkTransformerConfig) -> None:
         super().__init__()
 
+        self.config = config
         self.model = BulkTransformerModel(config)
 
     def forward(self, input: dict[str, torch.Tensor]) -> torch.Tensor:
@@ -32,3 +34,13 @@ class BulkTransformerInterface(LightningModule):
     def validation_step(self, batch: dict[str, torch.Tensor]):
         loss = self.loss_function(self.forward(batch), batch["target"])
         self.log("val_loss", loss.detach().item())
+
+    def predict_step(self, batch: dict[str, torch.Tensor]):
+        return (
+            polars.DataFrame(
+                self.forward(batch).detach().numpy(),
+                schema=self.config.TARGET_CLASSES,
+            )
+            .with_columns(customer_id=batch["customer_id"].numpy())
+            .select("customer_id", polars.col("*").exclude("customer_id"))
+        )

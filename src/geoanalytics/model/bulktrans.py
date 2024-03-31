@@ -17,6 +17,7 @@ class BulkTransformerConfig:
     CONTINUOUS_FEATURES: list[str] = field(default_factory=list)
     CATEGORICAL_FEATURES: list[str] = field(default_factory=list)
     CATEGORICAL_SIZES: list[int] = field(default_factory=list)
+    TARGET_CLASSES: list[str] = field(default_factory=list)
 
 
 class BulkTransformerModel(nn.Module):
