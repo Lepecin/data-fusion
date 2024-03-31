@@ -26,12 +26,17 @@ class VariableEncoder(nn.Module):
             }
         )
 
-    def forward(self, input: dict[str, torch.Tensor]) -> torch.Tensor:
+    def forward(
+        self,
+        categorical_input: torch.Tensor,
+        continuous_input: torch.Tensor,
+    ) -> torch.Tensor:
+
         categorical_output = torch.concat(
             [
                 self.categorical_encoder[key].forward(tensor)
                 for tensor, key in zip(
-                    torch.split(input["categorical"], 1, -1), self.categorical_features
+                    torch.split(categorical_input, 1, -1), self.categorical_features
                 )
             ],
             -2,
@@ -40,7 +45,7 @@ class VariableEncoder(nn.Module):
             [
                 self.continuous_encoder[key].forward(tensor.unsqueeze(-2))
                 for tensor, key in zip(
-                    torch.split(input["continuous"], 1, -1), self.continuous_features
+                    torch.split(continuous_input, 1, -1), self.continuous_features
                 )
             ],
             -2,
