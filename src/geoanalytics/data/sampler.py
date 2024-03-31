@@ -36,7 +36,6 @@ class FeatureSampler:
 
     def get_sample(self, customer_index: int) -> dict[str, torch.Tensor]:
         customer_data = self.data.filter(polars.col(self.customer_id) == customer_index)
-        length = len(customer_data)
 
         sample = {
             "categorical": torch.from_numpy(
@@ -45,7 +44,33 @@ class FeatureSampler:
             "continuous": torch.from_numpy(
                 customer_data[self.continuous_features].to_numpy()
             ),
-            "mask": torch.tensor([True] * length),
+            "mask": torch.tensor([True] * len(customer_data)),
         }
 
         return {key: self.pad_tensor(tensor) for key, tensor in sample.items()}
+
+
+class TargetSampler:
+    customer_id = "customer_id"
+    location_id = "location_id"
+
+    def __init__(
+        self,
+        data: polars.DataFrame,
+        target_hexes: list[str],
+    ) -> None:
+
+        self.data = data
+        self.target_hexes = target_hexes
+
+    def get_sample(self, customer_index: int) -> dict[str, torch.Tensor]:
+
+        label = torch.zeros(len(self.target_hexes)).float()
+
+        indices = self.data.filter(polars.col(self.customer_id) == customer_index)[
+            self.location_id
+        ].to_list()
+
+        label[indices] = 1.0
+
+        return {"target": label}
