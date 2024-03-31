@@ -11,7 +11,6 @@ class BulkTransformerConfig:
     HIDDEN_SIZE: int
     HEADS: int
     DROPOUT: float
-    CLASSES: int
     LAYERS: int
     FEEDFORWARD_SIZE: int
     CONTINUOUS_FEATURES: list[str] = field(default_factory=list)
@@ -42,7 +41,7 @@ class BulkTransformerModel(nn.Module):
         )
 
         self.mlp_classifier = nn.Sequential(
-            nn.Linear(config.HIDDEN_SIZE, config.CLASSES),
+            nn.Linear(config.HIDDEN_SIZE, len(config.TARGET_CLASSES)),
             nn.Softmax(-1),
         )
 
