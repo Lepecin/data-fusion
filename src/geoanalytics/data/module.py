@@ -15,10 +15,10 @@ class CustomDataConfig:
     hexses_data_path: str
     hexses_target_path: str
     input_path: str
+    data_directory: str
     target_path: Optional[str] = None
     categorical_features: list[str] = field(default_factory=list)
     continuous_features: list[str] = field(default_factory=list)
-    data_directory: str = (pathlib.Path(__file__).parent / "data-store").as_posix()
     fraction: float = 1.0
     seed: Optional[int] = None
     deploy: bool = False
@@ -32,7 +32,7 @@ class CustomDataModule(LightningDataModule):
         self,
         config: CustomDataConfig,
         batch_size: int,
-        num_workers: int,
+        num_workers: int = 0,
     ) -> None:
         super().__init__()
         self.set_config(config)
@@ -46,15 +46,16 @@ class CustomDataModule(LightningDataModule):
     def prepare_data(self) -> None:
         directory = pathlib.Path(self.config.data_directory)
         directory.mkdir(exist_ok=True)
-        self.feature_path = (directory / self.feature_data_filename).as_posix()
-        self.target_path = (directory / self.target_data_filename).as_posix()
+        self.feature_path = directory / self.feature_data_filename
+        self.target_path = directory / self.target_data_filename
 
-        get_feature_dataset(
-            self.config.hexses_data_path,
-            self.config.input_path,
-        ).write_parquet(self.feature_path)
+        if not self.feature_path.exists():
+            get_feature_dataset(
+                self.config.hexses_data_path,
+                self.config.input_path,
+            ).write_parquet(self.feature_path)
 
-        if self.config.target_path is not None:
+        if self.config.target_path is not None and not self.target_path.exists():
             get_target_dataset(
                 self.config.hexses_target_path,
                 self.config.target_path,
