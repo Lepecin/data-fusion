@@ -40,11 +40,11 @@ class FeatureSampler:
         sample = {
             "categorical": torch.from_numpy(
                 customer_data[self.categorical_features].to_numpy()
-            ),
+            ).int(),
             "continuous": torch.from_numpy(
                 customer_data[self.continuous_features].to_numpy()
-            ),
-            "mask": torch.tensor([True] * len(customer_data)),
+            ).float(),
+            "mask": torch.tensor([True] * len(customer_data)).bool(),
         }
 
         return {key: self.pad_tensor(tensor) for key, tensor in sample.items()}
