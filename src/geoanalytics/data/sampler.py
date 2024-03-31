@@ -47,7 +47,10 @@ class FeatureSampler:
             "mask": torch.tensor([True] * len(customer_data)).bool(),
         }
 
-        return {key: self.pad_tensor(tensor) for key, tensor in sample.items()}
+        sample = {key: self.pad_tensor(tensor) for key, tensor in sample.items()}
+        sample["customer_id"] = torch.tensor(customer_index).int()
+
+        return sample
 
 
 class TargetSampler:
