@@ -22,7 +22,6 @@ def get_feature_dataset(
     data = (
         polars.read_parquet(input_path)
         .join(coord_dataframe, on="h3_09")
-        .drop("h3_09")
         .fill_null(0)
         .sort("customer_id")
     )
@@ -30,7 +29,10 @@ def get_feature_dataset(
     return data
 
 
-def get_target_dataset(hexses_target_path: str, target_path: str) -> polars.DataFrame:
+def get_target_dataset(
+    hexses_target_path: str,
+    target_path: str,
+) -> polars.DataFrame:
 
     target_hexes = get_hexes(hexses_target_path)
 
@@ -44,7 +46,6 @@ def get_target_dataset(hexses_target_path: str, target_path: str) -> polars.Data
     data = (
         polars.read_parquet(target_path)
         .join(target_dataframe, on="h3_09")
-        .drop("h3_09")
         .sort("customer_id")
     )
 
