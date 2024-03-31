@@ -33,6 +33,21 @@ class TrainingDataset(Dataset):
         categorical_features: list[str],
         continuous_features: list[str],
     ) -> None:
+        """Pytorch dataset for generating samples meant for training
+        the model.
+
+        Samples given in form:
+            categorical: (S, Cat)
+            continuous: (S, Cont)
+            mask: (S,)
+            target: (Targ,)
+
+        Where:
+            S: Max number of entries
+            Cat: Number of categorical features
+            Cont: Numeber of continuous features
+            Targ: Number of target classes
+        """
 
         self.feature_sampler = FeatureSampler(
             feature_data, categorical_features, continuous_features
