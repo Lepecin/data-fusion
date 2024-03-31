@@ -6,9 +6,10 @@ from .bulktrans import BulkTransformerModel, BulkTransformerConfig
 
 
 class BulkTransformerInterface(LightningModule):
-    def __init__(self, config: BulkTransformerConfig) -> None:
+    def __init__(self, config: BulkTransformerConfig, learning_rate: float) -> None:
         super().__init__()
 
+        self.lr = learning_rate
         self.config = config
         self.model = BulkTransformerModel(config)
 
@@ -44,3 +45,6 @@ class BulkTransformerInterface(LightningModule):
             .with_columns(customer_id=batch["customer_id"].numpy())
             .select("customer_id", polars.col("*").exclude("customer_id"))
         )
+
+    def configure_optimizers(self) -> torch.optim.Optimizer:
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
