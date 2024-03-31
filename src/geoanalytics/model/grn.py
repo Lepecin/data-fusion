@@ -4,6 +4,18 @@ import torch.nn as nn
 from typing import Optional
 
 
+class MaskedLayerNorm(nn.LayerNorm):
+    def forward(
+        self,
+        input: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        if mask is None:
+            return super().forward(input)
+        input[mask] = super().forward(input[mask])
+        return input
+
+
 class GLU(nn.Module):
     def __init__(self, size: int) -> None:
         super().__init__()
@@ -28,18 +40,21 @@ class GRN(nn.Module):
             nn.Linear(size, size),
             GLU(size),
         )
-        self.norm = nn.LayerNorm(size)
+        self.norm = MaskedLayerNorm(size)
 
         self.linear_context = None
         if context_size is not None:
             self.linear_context = nn.Linear(context_size, size, False)
 
     def forward(
-        self, input: torch.Tensor, context: Optional[torch.Tensor] = None
+        self,
+        input: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+        context: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
 
         transformed = self.linear.forward(input)
         if context is not None and self.linear_context is not None:
             transformed = transformed.add(self.linear_context.forward(context))
 
-        return self.norm.forward(input.add(self.sequence.forward(transformed)))
+        return self.norm.forward(input.add(self.sequence.forward(transformed)), mask)

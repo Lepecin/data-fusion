@@ -50,12 +50,8 @@ class BulkTransformerModel(nn.Module):
         categorical_input = input["categorical"]
         continuous_input = input["continuous"]
 
-        output = self.encoder.forward(categorical_input, continuous_input)
+        output = self.encoder.forward(categorical_input, continuous_input, mask)
         transoutput = self.transformer.forward(
             output, src_key_padding_mask=mask.bitwise_not()
         )
-        ave_output = (
-            transoutput.mul(mask.unsqueeze(-1)).sum(1).div(mask.sum(1).unsqueeze(-1))
-        )
-
-        return self.mlp_classifier.forward(ave_output)
+        return self.mlp_classifier.forward(transoutput.mean(1))

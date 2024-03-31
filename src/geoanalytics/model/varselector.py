@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from typing import Optional
+
 from .grn import GRN
 from .varencoder import VariableEncoder
 
@@ -27,8 +29,8 @@ class VariableSelectionNetwork(nn.Module):
             {key: GRN(hidden_size) for key in self.features}
         )
 
-        self.attention_grn = nn.Sequential(
-            GRN(hidden_size * len(self.features)),
+        self.attention_grn = GRN(hidden_size * len(self.features))
+        self.attention = nn.Sequential(
             nn.Linear(hidden_size * len(self.features), len(self.features)),
             nn.Softmax(-1),
         )
@@ -37,6 +39,7 @@ class VariableSelectionNetwork(nn.Module):
         self,
         categorical_input: torch.Tensor,
         continuous_input: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         encoding = self.encoder.forward(
             categorical_input, continuous_input
@@ -44,16 +47,17 @@ class VariableSelectionNetwork(nn.Module):
 
         variables = torch.concat(  # (N, S, F, E)
             [
-                self.feature_grns[key].forward(
-                    tensor,  # (N, S, 1, E)
-                )
+                self.feature_grns[key].forward(tensor, mask=mask)  # (N, S, 1, E)
                 for key, tensor in zip(self.features, torch.split(encoding, 1, -2))
             ],
             -2,
         )
 
-        weights: torch.Tensor = self.attention_grn.forward(  # (N, S, F)
-            encoding.flatten(-2, -1),  # (N, S, E*F)
+        weights: torch.Tensor = self.attention.forward(
+            self.attention_grn.forward(  # (N, S, F)
+                encoding.flatten(-2, -1),
+                mask=mask,  # (N, S, E*F)
+            )
         )
 
         return variables.mul(weights.unsqueeze(-1)).sum(-2)
