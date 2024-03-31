@@ -63,6 +63,9 @@ class TargetSampler:
         self.data = data
         self.target_hexes = target_hexes
 
+    def get_customer_ids(self):
+        return self.data[self.customer_id].unique()
+
     def get_sample(self, customer_index: int) -> dict[str, torch.Tensor]:
 
         label = torch.zeros(len(self.target_hexes)).float()
