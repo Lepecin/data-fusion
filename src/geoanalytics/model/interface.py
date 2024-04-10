@@ -29,12 +29,12 @@ class BulkTransformerInterface(LightningModule):
 
     def training_step(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
         loss = self.loss_function(self.forward(batch), batch["target"])
-        self.log("train_loss", loss.detach().item())
+        self.log("train_loss", loss.detach().item(), True, True)
         return loss
 
     def validation_step(self, batch: dict[str, torch.Tensor]):
         loss = self.loss_function(self.forward(batch), batch["target"])
-        self.log("val_loss", loss.detach().item())
+        self.log("val_loss", loss.detach().item(), True, True)
 
     def predict_step(self, batch: dict[str, torch.Tensor]):
         return (
