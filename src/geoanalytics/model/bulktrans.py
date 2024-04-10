@@ -54,4 +54,9 @@ class BulkTransformerModel(nn.Module):
         transoutput = self.transformer.forward(
             output, src_key_padding_mask=mask.bitwise_not()
         )
-        return self.mlp_classifier.forward(transoutput.mean(1))
+
+        average_output = (
+            transoutput.mul(mask.unsqueeze(-1)).sum(1).div(mask.unsqueeze(-1).sum(1))
+        )
+
+        return self.mlp_classifier.forward(average_output)
